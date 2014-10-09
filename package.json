@@ -1,43 +1,38 @@
 {
   "name": "shellify",
+  "version": "0.0.4",
   "description": "Tools for Node.js command line interfaces",
+  "dependencies": {
+    "cedar": "^0.0.19"
+  },
+  "devDependencies": {
+    "zeriousify": "^0.1.10",
+    "exam": "^0.0.8",
+    "istanbul": "0.2.11",
+    "coveralls": "2.10.0"
+  },
   "keywords": [
     "shellify"
   ],
-  "version": "0.0.4",
   "main": "shellify.js",
   "bin": {
     "shellify": "shellify.js"
   },
-  "homepage": "https://github.com/lighterio/shellify",
-  "repository": "https://github.com/lighterio/shellify.git",
-  "bugs": "https://github.com/lighterio/shellify/issues",
-  "author": "Sam Eubank <sameubank@gmail.com>",
-  "contributors": [
-    {
-      "0": "Sam Eubank <sameubank@gmail.com>",
-      "name": "Sam Eubank",
-      "email": "sameubank@gmail.com"
-    }
-  ],
-  "engines": [
-    "node >= 0.2.6"
-  ],
+  "engines": {
+    "node": ">=0.2.6"
+  },
   "scripts": {
     "test": "./node_modules/exam/exam.js",
-    "retest": "./node_modules/exam/exam.js --watch",
     "cover": "istanbul cover ./node_modules/exam/exam.js",
     "report": "open coverage/lcov-report/index.html",
     "coveralls": "istanbul cover ./node_modules/exam/exam.js --report lcovonly -- -R spec && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage"
   },
-  "dependencies": {
-    "cedar": "0.0.12"
-  },
-  "devDependencies": {
-    "zeriousify": "0.1.9",
-    "exam": "0.0.7",
-    "istanbul": "0.2.11",
-    "coveralls": "2.10.0"
-  },
+  "repository": "https://github.com/lighterio/shellify.git",
+  "bugs": "https://github.com/lighterio/shellify/issues",
+  "homepage": "http://github.com/lighterio/shellify",
+  "author": "Sam Eubank <sameubank@gmail.com>",
+  "contributors": [
+    "Sam Eubank <sameubank@gmail.com>"
+  ],
   "license": "MIT"
 }
