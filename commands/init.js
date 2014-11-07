@@ -1,7 +1,7 @@
 var fs = require('fs');
 var spawn = require('child_process').spawn;
 var shellify = require('../shellify');
-var log = shellify.logger;
+var mkdirp = require('../common/fs/mkdirp-sync.js');
 
 var boilerplates = __dirname.replace(/commands$/, 'boilerplates/');
 
@@ -10,11 +10,10 @@ module.exports = function init(options) {
   var cwd = process.cwd().replace(/[\/\\]([^\/\\]+)$/, '/$1/');
 
   function fail(message) {
-    log('Cannot initialize Shellify inside "' + cwd + '".');
+    console.log(('\nCannot initialize Shellify inside "' + cwd + '".').yellow);
     if (message) {
-      log.error(message);
+      console.log(message.red);
     }
-    log.warn('Exiting.');
   }
 
   // If Shellify is already installed and up-to-date, skip to the boilerplatee.
@@ -27,7 +26,7 @@ module.exports = function init(options) {
   catch (e) {}
 
   // Install this version of Shellify in the current directory.
-  log('Installing Shellify...');
+  console.log('Installing Shellify...');
   var child = spawn('npm', ['install', '--save', 'shellify@' + shellify.version], {cwd: cwd});
 
   function writeIndented(data) {
@@ -48,11 +47,10 @@ module.exports = function init(options) {
   child.on('close', function (code) {
     if (code === 0) {
       process.stdout.write('\r');
-      log.info('Installed shellify@' + shellify.version);
       initBoilerplate();
     }
     else {
-      fail('Could execute "npm install shellify" in "' + cwd + '".');
+      fail('Cannot execute "npm install shellify" in "' + cwd + '".');
     }
   });
 
@@ -105,7 +103,7 @@ module.exports = function init(options) {
     // Create the "commands" directory.
     path = cwd + 'commands';
     try {
-      shellify.mkdirp.sync(path);
+      mkdirp(path);
     }
     catch (e) {
       return fail('Failed to create the commands directory "' + path + '".');
@@ -163,7 +161,7 @@ module.exports = function init(options) {
         fs.chmodSync(path, 0755);
       }
       catch (e) {
-        log.error(e);
+        console.log(e.stack.yellow);
       }
     }
 
@@ -182,7 +180,7 @@ module.exports = function init(options) {
       return fail('Failed to update the package "' + path + '".');
     }
 
-    log.info('Successfully initialized Shellify in "' + cwd + '".');
+    console.log(('\nSuccessfully initialized Shellify in "' + cwd + '".').green);
 
   }
 

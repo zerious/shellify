@@ -66,22 +66,13 @@ shellify({
 
 Shellify exports itself as a function, seen in the example above.
 
-### shellify.logger
+### shellify.colors
 
-The Cedar console logger used by shellify, complete with symbols and colors.
-
-### shellify.base
-
-A string that turns your terminal text back to its default color.
-
-### shellify.(red|yellow|green|cyan|blue|magenta|grey)
-
-A string that turns your terminal text red/yellow/green/cyan/blue/magenta/grey.
+Colors from `lighter-common`.
 
 ### shellify.mkdirp
 
-A reference to a copy of substack's `mkdirp` module, allowing the same
-functionality as `mkdir -p`.
+A recursive mkdir method from `lighter-common`.
 
 
 ## Acknowledgements

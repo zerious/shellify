@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+var dir = __dirname;
+
 // When called directly, run the shellify CLI.
 if (process.mainModule.filename == __filename) {
   setImmediate(function () {
     module.parent = module;
     shellify({
-      root: __dirname + '/',
+      root: dir + '/',
       commands: {
         init: {
           note: 'Initializes Shellify boilerplate code in the current working directory',
@@ -21,8 +23,10 @@ if (process.mainModule.filename == __filename) {
  */
 var shellify = module.exports = function (config) {
 
-  var log = shellify.logger;
   console.log();
+  process.on('exit', function () {
+    console.log();
+  });
 
   // Remove the extension so that it will match the process args.
   var caller = module.parent.filename.replace(/\..*$/, '');
@@ -34,23 +38,21 @@ var shellify = module.exports = function (config) {
 
   config.stdin = config.stdin || process.stdin;
   config.stdout = config.stdout || process.stdout;
-  log.stream = config.stdout;
 
   try {
     config.package = require(config.root + 'package.json');
   }
   catch (e) {
-    log.error('No package.json in "' + config.root + '".');
+    console.log(('No package.json in "' + config.root + '".').red);
   }
 
   if (!config.commands) {
-    log.error('Shellify config should have a commands object.');
+    console.log('Shellify config should have a commands object.'.red);
   }
 
   var name = config.package.name;
   config.commands = JSON.parse('{"help":' + JSON.stringify({
-    note: 'Learn about a command with ' + green + name +
-      cyan + ' help ' + base + '<command>'
+    note: 'Learn about a command with ' + name.green + ' help '.cyan + '<command>'
   }) + ',' + JSON.stringify(config.commands).substr(1));
 
   var args = process.argv;
@@ -67,7 +69,7 @@ var shellify = module.exports = function (config) {
   }
   else {
     if (commandName) {
-      console.log(red + 'Unknown command: "' + commandName + '"\n');
+      console.log(('Unknown command: "' + commandName + '"\n').red);
     }
     showHelp();
   }
@@ -107,14 +109,21 @@ var shellify = module.exports = function (config) {
     }
     command.input = {$: array};
     optionObjects.forEach(function (options) {
-      for (var long in options) {
-        var short = long[0];
-        var defaultValue = options[long].split('|')[1];
-        long = long.replace(/_(.)/, function (match, letter) {
+      for (var key in options) {
+        var short = key[0];
+        var defaultValue = options[key].split('|')[1];
+        key = key.replace(/_(.)/, function (match, letter) {
           short = letter;
         });
-        command.input[long] = input['-' + short] || input['--' + long] || defaultValue;
+        var long = hyphenate(key);
+        command.input[key] = input['-' + short] || input['--' + long] || defaultValue;
       }
+    });
+  }
+
+  function hyphenate(string) {
+    return string.replace(/([a-z])([A-Z])/g, function (match, lo, hi) {
+      return lo + '-' + hi.toLowerCase();
     });
   }
 
@@ -150,20 +159,20 @@ var shellify = module.exports = function (config) {
   }
 
   function pad(str, width) {
-    var len = Math.max(0, width - str.length);
+    var len = Math.max(2, width - str.length);
     return str + Array(len + 1).join(' ');
   }
 
   function showHelp(input, command, commandName) {
     var commands = config.commands;
-    var out = base;
+    var out = '';
 
     var width = 0;
 
     function calculateKeyWidth(map) {
       if (map) {
         for (var key in map) {
-          width = Math.max(width, key.length);
+          width = Math.max(width, key.replace(/_/g, '').length + 4);
         }
       }
     }
@@ -177,59 +186,52 @@ var shellify = module.exports = function (config) {
     if (helpCommand) {
       var options = helpCommand.options;
       calculateKeyWidth(options);
-      out += 'Command Usage:\n  ' + green + name + ' ' +
-        cyan + helpName +
-        base + (width ? ' <options>\n' : '') + '\n';
+      out += 'Command Usage:\n  ' + name.green + ' ' + helpName.cyan + (width ? ' <options>\n'.yellow : '') + '\n';
       if (width) {
         out += 'Options:';
-        for (var arg in options) {
-          var option = options[arg];
-          out += '\n  ' + cyan + '--' + pad(arg, width + 2) +
-            grey + option + base;
+        for (var key in options) {
+          var option = options[key];
+          var short = key[0];
+          key = key.replace(/_(.)/, function (match, letter) {
+            short = letter;
+          });
+          var arg = '-' + short + ', --' + hyphenate(key);
+          out += '\n  ' + pad(arg, width + 2).yellow + option.gray;
         }
       }
     }
     else {
-      out += 'Usage:\n  ' + green + name +
-        cyan + ' <command> ' + base + '<options>\n\n' +
-        base + 'Commands:';
+      out += 'Usage:\n  ' + name.green + ' <command> '.cyan + '<options>\n\n' + 'Commands:';
 
       calculateKeyWidth(commands);
 
       for (var key in commands) {
-        out += '\n  ' + cyan + pad(key, width + 2) +
-          grey + commands[key].note + base;
+        var command = commands[key];
+        var alias = command.alias;
+        var keys = key + (alias ? ', ' + alias : '');
+        out += '\n  ' + pad(keys, width + 2).cyan + commands[key].note.gray;
       }
     }
-    out += '\n';
     console.log(out);
   }
 
 };
 
 /**
- * Expose the version to module users.
+ * Expose terminal colors.
  */
-shellify.version = require('./package.json').version;
+shellify.colors = require(dir + '/common/string/colors.js');
 
 /**
- * Expose a Cedar console logger.
+ * Expose a recursive mkdir.
  */
-shellify.logger = require('cedar')('console');
+shellify.mkdirp = require(dir + '/common/fs/mkdirp');
 
 /**
- * Expose some simple terminal foreground colors.
+ * Expose the Shellify version via package.json lazy loading.
  */
-var base = shellify.base = '\u001b[39m';
-var red = shellify.red = '\u001b[31m';
-var yellow = shellify.yellow = '\u001b[33m';
-var green = shellify.green = '\u001b[32m';
-var cyan = shellify.cyan = '\u001b[36m';
-var blue = shellify.blue = '\u001b[34m';
-var magenta = shellify.magenta = '\u001b[35m';
-var grey = shellify.grey = '\u001b[90m';
-
-/**
- * Expose a copy of substack's mkdirp.
- */
-shellify.mkdirp = require('./lib/mkdirp');
+Object.defineProperty(shellify, 'version', {
+  get: function () {
+    return require('./package.json').version;
+  }
+});
