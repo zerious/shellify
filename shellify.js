@@ -232,6 +232,6 @@ shellify.mkdirp = require(dir + '/common/fs/mkdirp');
  */
 Object.defineProperty(shellify, 'version', {
   get: function () {
-    return require('./package.json').version;
+    return require(__dirname + '/package.json').version;
   }
 });
